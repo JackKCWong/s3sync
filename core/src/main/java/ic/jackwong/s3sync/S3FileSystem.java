@@ -10,7 +10,6 @@ import software.amazon.awssdk.transfer.s3.model.FileDownload;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;

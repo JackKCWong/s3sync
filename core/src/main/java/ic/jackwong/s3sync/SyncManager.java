@@ -2,10 +2,7 @@ package ic.jackwong.s3sync;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SyncManager {
     public record SyncResult(Collection<String> newObjects, Collection<String> deletedObjects) {
@@ -14,8 +11,14 @@ public class SyncManager {
 
     public SyncResult sync(URI src, URI dest) throws IOException {
         FileSystem srcFs = FileSystemFactory.create(src);
+        return sync(srcFs.list(src), src, dest);
+    }
+
+    public SyncResult sync(Collection<String> objects, URI src, URI dest) throws IOException {
+        FileSystem srcFs = FileSystemFactory.create(src);
         FileSystem destFs = FileSystemFactory.create(dest);
-        List<String> srcObjects = srcFs.list(src);
+
+        List<String> srcObjects = new ArrayList<>(objects);
         List<String> destObjects = destFs.list(dest);
 
         Set<String> newObjects = new HashSet<>(srcObjects);

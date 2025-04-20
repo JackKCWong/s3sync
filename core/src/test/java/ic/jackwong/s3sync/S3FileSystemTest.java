@@ -1,11 +1,12 @@
 package ic.jackwong.s3sync;
 
-import com.adobe.testing.s3mock.testcontainers.S3MockContainer;
+import com.adobe.testing.s3mock.S3MockApplication;
+import com.adobe.testing.s3mock.junit5.S3MockExtension;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
@@ -21,22 +22,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@Testcontainers
 public class S3FileSystemTest {
-    @Container
-    private static S3MockContainer s3Mock = new S3MockContainer("latest");
     private static S3AsyncClient s3Client;
+    @RegisterExtension
+    static final S3MockExtension s3Mock =
+            S3MockExtension.builder().silent().withSecureConnection(false).build();
 
     @BeforeAll
     static void setUp() {
-        System.setProperty("s3.endpoint", s3Mock.getHttpEndpoint());
+        System.setProperty("s3.endpoint", s3Mock.getServiceEndpoint());
         System.setProperty("aws.region", "default");
         System.setProperty("aws.accessKeyId", "nouse");
         System.setProperty("aws.secretAccessKey", "nouse");
 
         s3Client = S3AsyncClient.crtBuilder()
                 .credentialsProvider(DefaultCredentialsProvider.create())
-                .endpointOverride(URI.create(s3Mock.getHttpEndpoint()))
+                .endpointOverride(URI.create(s3Mock.getServiceEndpoint()))
                 .forcePathStyle(true)
                 .build();
 
