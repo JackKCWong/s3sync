@@ -29,6 +29,11 @@ class LocalFileObject implements FileObject {
     }
 
     @Override
+    public String getDirName() {
+        return this.file.getParent();
+    }
+
+    @Override
     public boolean isDirectory() {
         return file.isDirectory();
     }

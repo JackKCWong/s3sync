@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CompletionException;
 
 public class S3FileSystem implements SrcFileSystem {
+    public static final String DELIMITER = "/";
     private final URI root;
     private final String bucket;
     private final S3AsyncClient s3Client;
@@ -31,11 +32,13 @@ public class S3FileSystem implements SrcFileSystem {
             ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request.builder()
                     .bucket(bucket)
                     .maxKeys(10000)
+                    .prefix(this.root.getPath() + dir)
                     .build();
 
             ListObjectsV2Response resp = s3Client.listObjectsV2(listObjectsV2Request).join();
 
             List<FileObject> objects = resp.contents().stream()
+                    .filter(o -> !o.key().endsWith(dir))
                     .map((s3Object) -> this.new S3FileObject(s3Object))
                     .sorted(Comparator.comparing(S3FileObject::getName))
                     .map((s3FileObject) -> (FileObject) s3FileObject)
@@ -47,20 +50,25 @@ public class S3FileSystem implements SrcFileSystem {
         }
     }
 
-    public class S3FileObject implements FileObject {
+    class S3FileObject implements FileObject {
         private final S3Object s3Object;
 
-        public S3FileObject(S3Object s3Object) {
+        S3FileObject(S3Object s3Object) {
             this.s3Object = s3Object;
         }
 
         @Override
         public String getName() {
-            return this.s3Object.key().substring(S3FileSystem.this.root.getPath().length() + 1);
+            return this.s3Object.key().substring(this.s3Object.key().lastIndexOf(DELIMITER) + 1);
+        }
+
+        @Override
+        public String getDirName() {
+            return this.s3Object.key().substring(S3FileSystem.this.root.getPath().length(), this.s3Object.key().lastIndexOf(DELIMITER) + 1);
         }
 
         public boolean isDirectory() {
-            return this.s3Object.key().endsWith("/");
+            return this.s3Object.key().endsWith(DELIMITER) && this.s3Object.size() == 0;
         }
 
         @Override

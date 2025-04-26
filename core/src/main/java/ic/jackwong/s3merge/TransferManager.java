@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.BiFunction;
 
 public class TransferManager {
 
@@ -53,21 +52,23 @@ public class TransferManager {
         }, executor);
     }
 
-    public CompletableFuture<BulkTransferResult> mergeRecursively(String srcDir, String destDir, BiFunction<String, String, String> destNameMapper) {
+    public CompletableFuture<BulkTransferResult> mergeSubdirs(String srcDir, String destDir, RenameFunction destNameMapper) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                List<FileObject> objects = this.srcFileSystem.list(srcDir);
+                List<FileObject> objects = this.srcFileSystem.list(srcDir).stream().filter(FileObject::isDirectory).toList();
                 List<CompletableFuture<TransferResult>> transferResults = new ArrayList<>();
                 for (FileObject object : objects) {
-                    if (object.isDirectory()) {
-                        CompletableFuture<TransferResult> transferResult = mergeTo(object.getName(), destNameMapper.apply(destDir, object.getName()));
-                        transferResults.add(transferResult);
-                    }
+                    CompletableFuture<TransferResult> transferResult = mergeTo(object.getDirName(), destNameMapper.rename(object.getDirName(), destDir));
+                    transferResults.add(transferResult);
                 }
                 return new BulkTransferResult(transferResults);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }, executor);
+    }
+
+    public interface RenameFunction {
+        String rename(String originalName, String destDir);
     }
 }

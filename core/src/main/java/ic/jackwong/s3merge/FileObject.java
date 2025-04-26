@@ -6,6 +6,7 @@ import java.io.OutputStream;
 
 public interface FileObject {
     String getName();
+    String getDirName();
     boolean isDirectory();
     long getSize();
     OutputStream write() throws IOException;
