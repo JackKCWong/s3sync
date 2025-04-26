@@ -14,6 +14,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 class TransferManagerTest extends S3TestBase {
     @Test
@@ -31,17 +32,20 @@ class TransferManagerTest extends S3TestBase {
 
         transferResult.join();
 
-        assertThat(transferResult).isCompletedWithValueMatching(
-                        (result) -> result.destObject().getName().equals("merged.gz"))
+        assertThat(transferResult)
                 .isCompletedWithValueMatching(
                         (result) -> {
-                            try (InputStream is = result.destObject().read();) {
+                            FileObject fileObject = result.destObject();
+                            assertThat(fileObject.getName()).isEqualTo("merged.gz");
+
+                            try (InputStream is = result.destObject().read()) {
                                 byte[] content = new GZIPInputStream(is).readAllBytes();
-                                return new String(content).equals("header\ntest line1\ntest line2\n");
+                                assertThat(new String(content)).isEqualTo("header\ntest line1\ntest line2\n");
                             } catch (IOException e) {
-                                e.printStackTrace();
-                                return false;
+                                fail("Failed to read merged file", e);
                             }
+
+                            return true;
                         });
     }
 

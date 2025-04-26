@@ -50,7 +50,7 @@ public class TransferManager {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, executor);
     }
 
     public CompletableFuture<BulkTransferResult> mergeRecursively(String srcDir, String destDir, BiFunction<String, String, String> destNameMapper) {
@@ -68,6 +68,6 @@ public class TransferManager {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }, executor);
     }
 }
