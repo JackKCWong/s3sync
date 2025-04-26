@@ -1,4 +1,4 @@
-package ic.jackwong.s3sftp;
+package ic.jackwong.s3merge;
 
 import java.io.OutputStream;
 

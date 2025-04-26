@@ -1,15 +1,8 @@
 package ic.jackwong.s3sync;
 
-import com.adobe.testing.s3mock.S3MockApplication;
-import com.adobe.testing.s3mock.junit5.S3MockExtension;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import ic.jackwong.common.S3TestBase;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.io.IOException;
@@ -18,33 +11,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class S3FileSystemTest {
-    private static S3AsyncClient s3Client;
-    @RegisterExtension
-    static final S3MockExtension s3Mock =
-            S3MockExtension.builder().silent().withSecureConnection(false).build();
-
-    @BeforeAll
-    static void setUp() {
-        System.setProperty("s3.endpoint", s3Mock.getServiceEndpoint());
-        System.setProperty("aws.region", "default");
-        System.setProperty("aws.accessKeyId", "nouse");
-        System.setProperty("aws.secretAccessKey", "nouse");
-
-        s3Client = S3AsyncClient.crtBuilder()
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .endpointOverride(URI.create(s3Mock.getServiceEndpoint()))
-                .forcePathStyle(true)
-                .build();
-
-        CompletableFuture<CreateBucketResponse> bucketResp = s3Client.createBucket(b -> b.bucket("test-bucket"));
-        bucketResp.join();
-    }
-
+public class S3FileSystemTest extends S3TestBase {
     @Test
     public void testList(@TempDir Path tempDir) throws IOException {
         createDummyObjects(tempDir, List.of(
@@ -53,7 +22,7 @@ public class S3FileSystemTest {
         ));
 
         S3FileSystem s3fs = new S3FileSystem();
-        List<String> objs = s3fs.list(URI.create("s3://test-bucket/hello/"));
+        List<String> objs = s3fs.list(URI.create("s3://%s/hello/".formatted(TEST_BUCKET)));
         assertTrue(objs.contains("world/test.txt"));
         assertTrue(objs.contains("test.txt"));
     }
@@ -63,7 +32,7 @@ public class S3FileSystemTest {
         tmpFile.toFile().createNewFile();
 
         List<CompletableFuture<PutObjectResponse>> resp = keys.stream()
-                .map(key -> s3Client.putObject(b -> b.bucket("test-bucket").key(key), tmpFile)).toList();
+                .map(key -> s3AsyncClient.putObject(b -> b.bucket(TEST_BUCKET).key(key), tmpFile)).toList();
 
         resp.forEach(CompletableFuture::join);
     }
@@ -78,7 +47,7 @@ public class S3FileSystemTest {
         tempDir.resolve("dest/file0.txt").toFile().createNewFile();
 
         SyncManager.SyncResult syncRes = new SyncManager().sync(
-                URI.create("s3://test-bucket/hello/"),
+                URI.create("s3://%s/hello/".formatted(TEST_BUCKET)),
                 URI.create(tempDir.resolve("dest").toAbsolutePath().toString())
         );
 

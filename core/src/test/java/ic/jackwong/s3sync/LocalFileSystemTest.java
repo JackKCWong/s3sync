@@ -1,9 +1,5 @@
 package ic.jackwong.s3sync;
 
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.VFS;
-import org.apache.commons.vfs2.auth.StaticUserAuthenticator;
-import org.apache.commons.vfs2.provider.sftp.BytesIdentityInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
