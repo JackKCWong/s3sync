@@ -13,7 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 
-public class S3FileSystem implements SrcFileSystem {
+public class S3FileSystem implements SourceFileSystem {
     public static final String DELIMITER = "/";
     private final URI root;
     private final String bucket;

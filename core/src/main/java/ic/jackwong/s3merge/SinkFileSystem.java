@@ -1,5 +1,5 @@
 package ic.jackwong.s3merge;
 
-public interface DestFileSystem {
+public interface SinkFileSystem {
     FileObject open(String dest);
 }

@@ -12,26 +12,26 @@ import java.util.concurrent.Executors;
 public class S3MergeManager {
 
     private final Executor executor;
-    private final SrcFileSystem srcFileSystem;
-    private final DestFileSystem destFileSystem;
+    private final SourceFileSystem sourceFileSystem;
+    private final SinkFileSystem sinkFileSystem;
 
-    public S3MergeManager(int parallelism, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
+    public S3MergeManager(int parallelism, SourceFileSystem sourceFileSystem, SinkFileSystem sinkFileSystem) {
         this.executor = Executors.newWorkStealingPool(parallelism);
-        this.srcFileSystem = srcFileSystem;
-        this.destFileSystem = destFileSystem;
+        this.sourceFileSystem = sourceFileSystem;
+        this.sinkFileSystem = sinkFileSystem;
     }
 
-    public S3MergeManager(Executor executor, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
+    public S3MergeManager(Executor executor, SourceFileSystem sourceFileSystem, SinkFileSystem sinkFileSystem) {
         this.executor = executor;
-        this.srcFileSystem = srcFileSystem;
-        this.destFileSystem = destFileSystem;
+        this.sourceFileSystem = sourceFileSystem;
+        this.sinkFileSystem = sinkFileSystem;
     }
 
     public CompletableFuture<TransferResult> mergeTo(String src, String dest) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                List<FileObject> objects = this.srcFileSystem.list(src);
-                FileObject destObject = this.destFileSystem.open(dest);
+                List<FileObject> objects = this.sourceFileSystem.list(src);
+                FileObject destObject = this.sinkFileSystem.open(dest);
                 try (OutputStream os = destObject.write()) {
                     long bytesTransferred = 0;
                     for (FileObject object : objects) {
@@ -55,7 +55,7 @@ public class S3MergeManager {
     public CompletableFuture<BulkTransferResult> mergeSubdirs(String srcDir, String destDir, RenameFunction destNameMapper) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                List<FileObject> objects = this.srcFileSystem.list(srcDir).stream().filter(FileObject::isDirectory).toList();
+                List<FileObject> objects = this.sourceFileSystem.list(srcDir).stream().filter(FileObject::isDirectory).toList();
                 List<CompletableFuture<TransferResult>> transferResults = new ArrayList<>();
                 for (FileObject object : objects) {
                     CompletableFuture<TransferResult> transferResult = mergeTo(object.getDirName(), destNameMapper.rename(object.getDirName(), destDir));

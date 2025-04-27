@@ -3,7 +3,7 @@ package ic.jackwong.s3merge;
 import java.io.*;
 import java.nio.file.Path;
 
-public class LocalFileSystem implements DestFileSystem {
+public class LocalFileSystem implements SinkFileSystem {
     private final Path root;
 
     public LocalFileSystem(Path root) {
