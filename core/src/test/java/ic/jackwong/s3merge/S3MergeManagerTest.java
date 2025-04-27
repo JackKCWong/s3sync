@@ -18,7 +18,7 @@ import java.util.zip.GZIPOutputStream;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-class TransferManagerTest extends S3TestBase {
+class S3MergeManagerTest extends S3TestBase {
     @Test
     public void can_merge_s3_dir_to_a_single_file(@TempDir Path rootDir) throws IOException {
         // given
@@ -27,10 +27,10 @@ class TransferManagerTest extends S3TestBase {
         uploadObject("/to_merge/testdir/part2.gz", mkgz("test line2\n"));
 
         // when
-        TransferManager transferManager = new TransferManager(1,
+        S3MergeManager s3MergeManager = new S3MergeManager(1,
                 new S3FileSystem(s3AsyncClient, URI.create("s3://%s/to_merge/".formatted(TEST_BUCKET))),
                 new LocalFileSystem(rootDir));
-        CompletableFuture<TransferResult> transferResult = transferManager.mergeTo(
+        CompletableFuture<TransferResult> transferResult = s3MergeManager.mergeTo(
                 "testdir/", "merged.gz"
         );
 
@@ -66,11 +66,11 @@ class TransferManagerTest extends S3TestBase {
         rootDir.resolve("merged").toFile().mkdirs();
 
         // when
-        TransferManager transferManager = new TransferManager(2,
+        S3MergeManager s3MergeManager = new S3MergeManager(2,
                 new S3FileSystem(s3AsyncClient, URI.create("s3://%s/to_merge/".formatted(TEST_BUCKET))),
                 new LocalFileSystem(rootDir));
 
-        BulkTransferResult result = transferManager.mergeSubdirs("testdir/", "merged/",
+        BulkTransferResult result = s3MergeManager.mergeSubdirs("testdir/", "merged/",
                 ((originalName, destDir) ->
                         destDir + "/" + originalName.replace("key=", "")
                                 .replaceAll("/$", "")

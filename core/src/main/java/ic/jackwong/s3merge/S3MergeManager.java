@@ -9,19 +9,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class TransferManager {
+public class S3MergeManager {
 
     private final Executor executor;
     private final SrcFileSystem srcFileSystem;
     private final DestFileSystem destFileSystem;
 
-    public TransferManager(int parallelism, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
+    public S3MergeManager(int parallelism, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
         this.executor = Executors.newWorkStealingPool(parallelism);
         this.srcFileSystem = srcFileSystem;
         this.destFileSystem = destFileSystem;
     }
 
-    public TransferManager(Executor executor, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
+    public S3MergeManager(Executor executor, SrcFileSystem srcFileSystem, DestFileSystem destFileSystem) {
         this.executor = executor;
         this.srcFileSystem = srcFileSystem;
         this.destFileSystem = destFileSystem;
