@@ -11,8 +11,8 @@ public class LocalFileSystem implements SinkFileSystem {
     }
 
     @Override
-    public FileObject open(String dest) {
-        return new LocalFileObject(new File(root.toAbsolutePath().toString(), dest));
+    public FileObject open(String filepath) {
+        return new LocalFileObject(new File(root.toAbsolutePath().toString(), filepath));
     }
 }
 
