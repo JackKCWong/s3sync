@@ -82,12 +82,13 @@ class S3MergeManagerTest extends S3TestBase {
         result.transfers().forEach(r -> r.join());
         List<Path> merged = Files.list(rootDir.resolve("merged/")).toList();
         assertThat(merged).hasSize(2);
-        assertThat(new GZIPInputStream(Files.newInputStream(
+        assertThat(new String(new GZIPInputStream(Files.newInputStream(
                 rootDir.resolve("merged/testdir_dir1.gz")))
-                .readAllBytes()).isEqualTo("hello\nworld\n".getBytes());
-        assertThat(new GZIPInputStream(Files.newInputStream(
+                .readAllBytes())).isEqualTo("hello\nworld\n");
+
+        assertThat(new String(new GZIPInputStream(Files.newInputStream(
                 rootDir.resolve("merged/testdir_dir2.gz")))
-                .readAllBytes()).isEqualTo("test2 line1\ntest2 line2\n".getBytes());
+                .readAllBytes())).isEqualTo("test2 line1\ntest2 line2\n");
     }
 
     private byte[] mkgz(String content) throws IOException {

@@ -58,7 +58,7 @@ public class S3MergeManager {
                 List<FileObject> objects = this.sourceFileSystem.list(srcDir).stream().filter(FileObject::isDirectory).toList();
                 List<CompletableFuture<TransferResult>> transferResults = new ArrayList<>();
                 for (FileObject object : objects) {
-                    CompletableFuture<TransferResult> transferResult = mergeTo(object.getDirName(), destNameMapper.rename(object.getDirName(), destDir));
+                    CompletableFuture<TransferResult> transferResult = mergeTo(object.getName(), destNameMapper.rename(object.getName(), destDir));
                     transferResults.add(transferResult);
                 }
                 return new BulkTransferResult(transferResults);
