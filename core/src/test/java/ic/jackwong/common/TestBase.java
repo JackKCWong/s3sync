@@ -1,31 +1,39 @@
 package ic.jackwong.common;
 
 import com.adobe.testing.s3mock.junit5.S3MockExtension;
+import org.apache.sshd.client.ClientBuilder;
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.keyverifier.ServerKeyVerifier;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.server.SshServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
+import java.net.SocketAddress;
 import java.net.URI;
+import java.security.PublicKey;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class S3TestBase {
+public abstract class TestBase {
     @RegisterExtension
     protected static final S3MockExtension s3Mock =
             S3MockExtension.builder().silent().withSecureConnection(false).build();
 
     protected static S3AsyncClient s3AsyncClient;
     protected static S3Client s3Client;
+    protected static SshServer sshServer;
+    protected static SshClient sshClient;
 
     @BeforeAll
-    static void setUp() {
+    static void setUp() throws Exception {
         System.setProperty("s3.endpoint", s3Mock.getServiceEndpoint());
         System.setProperty("aws.region", "default");
         System.setProperty("aws.accessKeyId", "nouse");
@@ -43,6 +51,8 @@ public abstract class S3TestBase {
                 .forcePathStyle(true)
                 .build();
 
+        sshServer = SftpUtils.startSshServer(2222);
+        sshClient = SftpUtils.startClient();
     }
 
     protected final String TEST_BUCKET = UUID.randomUUID().toString();

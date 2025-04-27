@@ -43,8 +43,6 @@ public class S3MergeManager {
                         }
                     }
                     return new TransferResult(bytesTransferred, destObject);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

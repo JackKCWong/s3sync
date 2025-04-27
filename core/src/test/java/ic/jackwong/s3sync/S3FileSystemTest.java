@@ -1,6 +1,6 @@
 package ic.jackwong.s3sync;
 
-import ic.jackwong.common.S3TestBase;
+import ic.jackwong.common.TestBase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class S3FileSystemTest extends S3TestBase {
+public class S3FileSystemTest extends TestBase {
     @Test
     public void testList(@TempDir Path tempDir) throws IOException {
         createDummyObjects(tempDir, List.of(

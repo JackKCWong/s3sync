@@ -27,7 +27,6 @@ public class S3FileSystem implements SourceFileSystem {
         this.s3Client = s3Client;
     }
 
-    // https://www.baeldung.com/java-aws-s3-list-bucket-objects#pagination-with-listobjectsv2iterable
     @Override
     public List<FileObject> list(String dir) throws IOException {
         try {

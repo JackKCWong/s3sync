@@ -1,6 +1,10 @@
 package ic.jackwong.s3merge;
 
-import ic.jackwong.common.S3TestBase;
+import ic.jackwong.common.TestBase;
+import ic.jackwong.s3merge.sftp.SftpFileSystem;
+import org.apache.sshd.client.future.ConnectFuture;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -18,9 +22,18 @@ import java.util.zip.GZIPOutputStream;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-class S3MergeManagerTest extends S3TestBase {
+class S3MergeManagerTest extends TestBase {
     @Test
     public void can_merge_s3_dir_to_a_single_file(@TempDir Path rootDir) throws IOException {
+        // setup
+        ConnectFuture connect = sshClient.connect("testuser@127.0.0.1:2222".formatted(sshServer.getPort()));
+        connect.verify(3000);
+        ClientSession sshSession = connect.getClientSession();
+        sshSession.addPasswordIdentity("testpass");
+        sshSession.auth().verify(3000);
+        SftpClientFactory sftpClientFactory = SftpClientFactory.instance();
+        SftpFileSystem sftpFs = new SftpFileSystem(sftpClientFactory.createSftpClient(sshSession));
+
         // given
         uploadObject("/to_merge/testdir/header.gz", mkgz("header\n"));
         uploadObject("/to_merge/testdir/part1.gz", mkgz("test line1\n"));
@@ -29,7 +42,7 @@ class S3MergeManagerTest extends S3TestBase {
         // when
         S3MergeManager s3MergeManager = new S3MergeManager(1,
                 new S3FileSystem(s3AsyncClient, URI.create("s3://%s/to_merge/".formatted(TEST_BUCKET))),
-                new LocalFileSystem(rootDir));
+                sftpFs);
         CompletableFuture<TransferResult> transferResult = s3MergeManager.mergeTo(
                 "testdir/", "merged.gz"
         );
@@ -43,7 +56,14 @@ class S3MergeManagerTest extends S3TestBase {
                             FileObject fileObject = result.destObject();
                             assertThat(fileObject.getName()).isEqualTo("merged.gz");
 
-                            try (InputStream is = result.destObject().read()) {
+                            try {
+                                sftpFs.rename("merged.gz", "merged.gz_done");
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            try (FileObject fo = sftpFs.open("merged.gz_done");
+                                 InputStream is = fo.read()) {
                                 byte[] content = new GZIPInputStream(is).readAllBytes();
                                 assertThat(new String(content)).isEqualTo("header\ntest line1\ntest line2\n");
                             } catch (IOException e) {
